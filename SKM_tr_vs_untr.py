@@ -130,7 +130,7 @@ unfit_vs_responders = discriminant_reactions(select(flx,unfit+responders),u_vs_r
 
 #%%
 # barplots # actually will be KDE density plots of certain reactions
-
+'''
 for r in coeff['Reaction ID'].values:
 
     ax = plt.subplot(111)
@@ -148,6 +148,6 @@ for r in coeff['Reaction ID'].values:
     plt.savefig('/home/acabbia/Documents/Muscle_Model/tissueModels-distance/figures/supplementary_material/fig1/'+r+'.png')
 
     plt.show()
-
+'''
 #%%
 
