@@ -1,0 +1,31 @@
+# Don't track content of these folders
+figures/
+__pycache__/
+.vscode
+
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+*.so
+
+# Packages #
+############
+*.tab
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.tar.gz
+*.zip
+*.tsv
+*.sav
+*.json

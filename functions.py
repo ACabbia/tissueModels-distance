@@ -59,10 +59,11 @@ def load_library(path, ref_model, sampling=False, FBA=False):
     flx_df = pd.DataFrame(index=[r.id for r in ref_model.reactions])
     graphlist = []
 
-    for filename in tqdm(sorted(os.listdir(path))):
+    for filename in sorted(os.listdir(path)):
         model = cobra.io.read_sbml_model(path+filename)
         label = str(filename).split('.')[0]
-
+        print('===================================================================')
+        print('Loaded model', label)
         # 1: make binary matrices
         rxns, mets, genes = binary(model, ref_model)
         reactions_matrix[label] = rxns
@@ -75,20 +76,35 @@ def load_library(path, ref_model, sampling=False, FBA=False):
 
         # 3: FBA/sampling
         if sampling:
-
-            smp = cobra.flux_analysis.sample(model, 1000, processes=4)
-
+            try:
+                smp = cobra.flux_analysis.sample(model, 1000, processes=4)
+            except:
+                pass
+                
             # find mean from sampled fluxes and append to sampled_fluxes df
-            flx_df[label] = smp.mean()
+                flx_df[label] = smp.mean()
 
         if FBA:
-
+            print('FBA...')
             bm = [r.id for r in model.reactions if 'biomass'in r.id]
 
-            model.objective = bm[0]
+            try:
+                bm.remove('EX_biomass(e)')
 
-            for e in model.exchanges:
-                e.bounds = -1000, 1000
+            except ValueError:
+                pass
+            
+            try:
+                model.objective = 'ATPS4m'
+            except:
+                model.objective = bm[0]
+
+            try:
+                model =  get_bounds_from_file(model, 'fluxes.tsv')
+            except:
+                    
+                for e in model.exchanges:
+                    e.bounds = -1000, 1000
 
             sol = model.optimize()
 
@@ -303,7 +319,6 @@ def plot_trajectory_adj(embedding_df, label_Tr, patient_nr_label, plot_arrows=Tr
     plt.ylabel('PC 2')
     plt.show()
 
-
 def Mdist(rxn, graphlist, flux_df):
 
     pw_DM = jaccard_DM(rxn)
@@ -314,13 +329,12 @@ def Mdist(rxn, graphlist, flux_df):
 
     return M_dist
 
-
 def flux_DM(df):
     # returns square pairwise (cosine) distance matrix between elements of sampled flux df
     df.fillna(inplace=True, value=0)
-    DM = pd.DataFrame(squareform(pdist(df.T, metric=cosine)),
-                      index=df.columns, columns=df.columns)
-    return DM
+    # take absolute value to ensure positivity == metric
+    DM = df.corr().abs()
+    return 1-DM
 
 
 def gKernel_DM(graphList):
@@ -330,14 +344,13 @@ def gKernel_DM(graphList):
     K = pd.DataFrame(gkernel.fit_transform(graphList))
     return 1-K
 
-
-def embedding(pw_matrix, embed):
+def embed(pw_matrix, embed):
 
     # different embeddings (MDS, KPCA, TSNE)
 
     if embed == 'KernelPCA':
-            embedding = pd.DataFrame(
-                KernelPCA(kernel="precomputed", n_components=2).fit_transform(1-pw_matrix))
+        embedding = pd.DataFrame(KernelPCA(
+            kernel="precomputed", n_components=2).fit_transform(1-pw_matrix))
     elif embed == 'TSNE':
         embedding = pd.DataFrame(TSNE(
             metric="precomputed", random_state=42, perplexity=5).fit_transform(pw_matrix))
@@ -348,3 +361,100 @@ def embedding(pw_matrix, embed):
         print('Embedding type unknown. Possible values: KernelPCA, TSNE, MDS')
 
     return embedding
+
+
+def select(df, to_keep = []):
+
+    # selects rows and columns in a df
+    # to_keep : list of strings or substrings of the indexes of the cols to keep
+
+    ids = []
+    for i in df.columns:
+        for n in to_keep:
+            if n in i:
+                ids.append(i)
+
+    new_dm = df.loc[:,ids]
+
+    return new_dm
+
+def select_DM(pw_DM, to_keep = []):
+
+    # selects rows and columns in a square (symmetric) distance matrix
+    # to_keep : list of strings or substrings of the indexes of the rows/cols to keep
+
+    ids = []
+    for i in pw_DM.index:
+        for n in to_keep:
+            if n in i:
+                ids.append(i)
+
+    new_dm = pw_DM.loc[ids,ids]
+
+    return new_dm
+
+
+def RQ(model):
+    model.objective = 'ATPS4m'
+    sol = model.optimize()
+    
+    rq = np.nan
+
+    try:
+        rq = abs(sol['EX_co2(e)']) / abs(sol['EX_o2(e)'])
+    except:
+        print('something happened')
+
+    return rq
+
+
+def RQ_test(path):
+    'Functional Metabolic tests'
+    carbon_sources = ['EX_glc(e)','EX_fru(e)','EX_octa(e)','EX_lnlnca(e)','EX_hdcea(e)','EX_lnlc(e)',
+                      'EX_ttdca(e)','EX_hdca(e)','EX_ocdca(e)','EX_arach(e)','EX_lgnc(e)']
+    rq_df = pd.DataFrame(index = carbon_sources)
+
+    for filename in sorted(os.listdir(path)):
+        model = cobra.io.read_sbml_model(path+filename)
+        print(filename)
+
+        rq_list = []
+        for c in carbon_sources:
+
+            #close all inflows , leave outflows open
+      
+            for r in model.exchanges:
+                r.bounds = 0,0
+            
+            # make sure sink reactions are irreversible
+            for r in model.reactions:
+                if 'sink' in r.id:
+                    r.bounds = 0,1000
+
+            try:
+                #allow oxygen and water free exchange, co2 outflow 
+                model.reactions.get_by_id('EX_o2(e)').bounds= -1000,1000
+                model.reactions.get_by_id('EX_h2o(e)').bounds= -1000,1000
+                model.reactions.get_by_id('EX_co2(e)').bounds= 0,1000
+                #model.reactions.get_by_id('EX_h(e)').bounds= 0,1000 
+                        
+                # allow inflow of selected carbon source 
+                model.reactions.get_by_id(c).bounds = -1000, 1000 
+            
+            except KeyError:
+                pass        
+    
+            # FBA and RQ computations
+            rq = RQ(model)
+            rq_list.append(rq)
+            print(c)
+            print('RQ = ',rq)
+            #print(model.summary())
+                    
+        print("===============================================================")
+
+        rq_df[filename] = rq_list
+
+    return rq_df     
+
+    ## glc and fru don't work yet

@@ -1,3 +1,5 @@
+#%%
+
 import GEOparse
 import pandas as pd
 from sklearn.linear_model import Lasso
@@ -7,19 +9,15 @@ from sklearn.decomposition import PCA , KernelPCA
 import seaborn as sns
 import matplotlib.pyplot as plt 
 
-def plot_pca(pca,label):
-        
-    g = sns.scatterplot(
-        x=pca[:, 0], y=pca[:, 1], hue=label, legend='brief')
+def plot_pca(pca_df,label):
+       
+    g = sns.scatterplot(pca_df.iloc[:, 0],pca_df.iloc[:, 1],hue=label,palette='colorblind')
 
     g.tick_params(axis='x', labelsize=14)
     g.tick_params(axis='y', labelsize=14)
 
-    box = g.get_position()  # get position of figure
-    g.set_position([box.x0, box.y0, box.width, box.height])  # resize position
-
     # Put a legend to the right side
-    plt.legend(loc='center right', bbox_to_anchor=(1.5, 0.5), ncol=1)
+    #plt.legend(loc='center right', bbox_to_anchor=(1.1, 0.5), ncol=1)
 
     plt.show(g)
 
@@ -45,24 +43,28 @@ for gsm in serie.gsms:
 #%%
 
 # use Lasso Logistic regression to select features (reactions)
-reg = Lasso(alpha = 0.7).fit(expression_matrix.T,cluster)
+reg = Lasso(alpha = 0.7, tol=0.001).fit(expression_matrix.T,cluster)
 
 coeff = pd.DataFrame(reg.coef_, index = expression_matrix.index)
 coeff = coeff[coeff!=0].dropna().sort_values(by=0,ascending = False)
 
-coeff.index = [ translator[i] for i in list(coeff.index)]
+idx = []
 
+for i in list(coeff.index):
+    try:
+        idx.append(translator[i])
+    except:
+        idx.append(i)
+        continue
+coeff.index = idx
+coeff
 
 #Does plotting the raw expresson data give the same insights?
 #%%
 
-pca = PCA(n_components=2).fit_transform(expression_matrix.T)
-plot_pca(pca,cluster)
-#%%
-
 dm = squareform(pdist(expression_matrix.T, metric = 'cosine'))
 kpca = KernelPCA(n_components=2,kernel='precomputed').fit_transform(1- dm )
-
-plot_pca(kpca,label)
+kpca_df = pd.DataFrame(kpca, columns = ['PC1','PC2'])
+plot_pca(kpca_df,cluster)
 
 #%%
