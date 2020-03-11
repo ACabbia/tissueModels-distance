@@ -36,7 +36,7 @@ M_dist = (pw_DM + pw_GK ) / 2
 
 #%%
 ##plots
-embed = embedding(M_dist, 'KernelPCA')
+embed = embed(M_dist, 'KernelPCA')
 sns.scatterplot(embed.iloc[:,0],embed.iloc[:,1],hue=label)
 sns.clustermap(M_dist)
 

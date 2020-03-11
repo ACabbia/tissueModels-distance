@@ -29,6 +29,7 @@ for s in list(label.value_counts()[label.value_counts()<10].index):
 #load models 
 ref_model = cobra.io.read_sbml_model(path_ref)
 rxn, met, gen, graphlist, flx = load_library(path_lib, ref_model,sampling = True, FBA=False)
+rxn.to_csv('RXN_mat_AGORA.tsv', sep = '\t')
 
 flx.to_csv('smpl_mat_AGORA.tsv', sep = '\t')
 #load flux matrix to save time

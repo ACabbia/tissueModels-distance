@@ -1,0 +1,74 @@
+,Name,Pathway,Untrained,Trained
+34DHPHAMT,"3,4-Dihydroxyphenylacetate:amet O-methyltransferase",Tyrosine metabolism,1,0
+34DHPLACOX,"3,4-Dihydroxyphenylacetaldehyde:NAD+ oxidoreductase",Tyrosine metabolism,1,0
+34DHPLACOX_NADP_,"3,4-Dihydroxyphenylacetaldehyde:NADP+ oxidoreductase",Tyrosine metabolism,1,0
+APOCF,Apocarboxylase formation,Biotin metabolism,1,0
+APOCFm,"Apocarboxylase formation, mitochondrial",Biotin metabolism,1,0
+APOC_LYS_BTNP,proteolysis of apoC-Lys-btn,Biotin metabolism,1,0
+APOC_LYS_BTNPm,"proteolysis of apoC-Lys-btn, mitochondrial",Biotin metabolism,1,0
+BAAT4x,bile acid Coenzyme A: amino acid N-acyltransferase,Bile acid synthesis,1,0
+BACCL,biotin-[acetyl-CoA-carboxylase] ligase,Biotin metabolism,1,0
+BACCLm,"biotin-[acetyl-CoA-carboxylase] ligase, mitochondrial",Biotin metabolism,1,0
+BTND1,biotinidase (biotin),Biotin metabolism,1,0
+BTND1n,"biotinidase (biotin), nuclear",Biotin metabolism,1,0
+BTNDe,"biotinidase (biotin), extracellular",Biotin metabolism,1,0
+BTNDm,"biotinidase (biotin), mitochondrial",Biotin metabolism,1,0
+BTNPL,holocarboxylase synthestase (biotin protein ligase),Biotin metabolism,1,0
+BTNPLm,"holocarboxylase synthestase (biotin protein ligase), mitochondrial",Biotin metabolism,1,0
+C3STDH1r,C-3 sterol dehydrogenase (4-methylzymosterol),Cholesterol metabolism,1,0
+GTPCI,GTP cyclohydrolase I,Tetrahydrobiopterin metabolism,1,0
+GTPCIn,"GTP cyclohydrolase I, nuclear",Tetrahydrobiopterin metabolism,1,0
+H6MTer_U,"H6 mannosyltransferase, endoplasmic reticulum",Phosphatidylinositol phosphate metabolism,1,0
+H7MTer_U,"H7 mannosyltransferase, endoplasmic reticulum",Phosphatidylinositol phosphate metabolism,1,0
+HSD17B9r,17-beta-hydroxysteroid dehydrogenase (type 7),Steroid metabolism,1,0
+HSD3B3r,3 beta-hydroxysteroid dehydrogenase type 1,Steroid metabolism,1,0
+HSD3B7P,"hydroxy-delta-5-steroid dehydrogenase, 3 beta- and steroid delta-isomerase 7",Bile acid synthesis,2,0
+M4BTAer,"M4B transamidase, endoplasmic reticulum",Phosphatidylinositol phosphate metabolism,1,0
+M4CET3er,"M4C phosphoethanolaminyl transferase, endoplasmic reticulum",Phosphatidylinositol phosphate metabolism,1,0
+PNTEH,Hydrolase Class ( RXN R02973),CoA catabolism,1,0
+THRD_L,L-threonine deaminase,"Glycine, serine, alanine and threonine metabolism",2,0
+VLCS2p,Very-long-chain-fatty-acid-CoA ligase,Bile acid synthesis,4,0
+r0120,"GTP 7,8-8,9-dihydrolase Folate biosynthesis EC:3.5.4.16",Tetrahydrobiopterin metabolism,1,0
+r0121,r0121,Tetrahydrobiopterin metabolism,1,0
+r0130,gamma-glutamyltranspeptidase Glutathione metabolism EC:3.4.11.4,Glutathione metabolism,1,0
+r0208,GTP:alpha-D-mannose-1-phosphate guanylyltransferase Fructose and mannose metabolism EC:2.7.7.13,Fructose and mannose metabolism,1,0
+r0648,(5-Glutamyl)-peptide:amino-acid 5-glutamyltransferase Cyanoamino acid metabolism EC:2.3.2.2,,1,0
+r0649,(5-Glutamyl)-peptide:amino-acid 5-glutamyltransferase Cyanoamino acid metabolism EC:2.3.2.2,,1,0
+r0708,"2-Amino-4-hydroxy-6-(erythro-1,2,3-trihydroxypropyl) dihydropteridine triphosphate 7,8-8,9-dihydrolase Folate biosynthesis EC:3.5.4.16",Tetrahydrobiopterin metabolism,1,0
+r0709,r0709,Tetrahydrobiopterin metabolism,1,0
+r0775,"Formamidopyrimidine nucleoside triphosphate 7,8-8,9-dihydrolase Folate biosynthesis EC:3.5.4.16",,1,0
+r0776,r0776,Tetrahydrobiopterin metabolism,1,0
+r0777,"GTP 7,8-8,9-dihydrolase Folate biosynthesis EC:3.5.4.16",Tetrahydrobiopterin metabolism,1,0
+r0778,r0778,Tetrahydrobiopterin metabolism,1,0
+RE1062M,RE1062,Miscellaneous,1,0
+RE1796R,RE1796,Bile acid synthesis,2,0
+BAAT5x,RE1845,Bile acid synthesis,2,0
+GLYPROPRO1c,hydrolysis of Prolylglycine in the small intestine for cellular uptake,"Transport, extracellular",3,0
+PROGLYPRO1c,hydrolysis of glycylproline in the small intestine for cellular uptake,"Transport, extracellular",3,0
+ADRNLPVESSEC,Adrenaline secretion via secretory vesicle (ATP driven),"Transport, extracellular",1,0
+BIOCYTtn,"biocytin transport, nuclear","Transport, nuclear",1,0
+BTNtn,"Biotin transport, nuclear","Transport, nuclear",1,0
+CGLYt3_2_,Cys-Gly transport in via proton symport,"Transport, extracellular",1,0
+DGCHOLtx,bile acid intracellular transport,"Transport, peroxisomal",1,0
+LYStn,"L-lysine transport, nuclear","Transport, nuclear",1,0
+OCDCEAtr,fatty acid transport via diffusion,"Transport, extracellular",1,0
+TDCHOLAte,bile acid intracellular transport,"Transport, extracellular",2,0
+TDCHOLAtx,bile acid intracellular transport,"Transport, peroxisomal",2,0
+r0002,Active transport,"Transport, endoplasmic reticular",2,0
+r1364,Vesicular transport,"Transport, lysosomal",2,0
+r1365,Vesicular transport,"Transport, lysosomal",2,0
+r1401,Facilitated diffusion,Fatty acid oxidation,1,0
+r2102,Major Facilitator(MFS) TCDB:2.A.1.13.1,"Transport, extracellular",3,0
+r2103,Major Facilitator(MFS) TCDB:2.A.1.13.1,"Transport, extracellular",2,0
+r2114,Major Facilitator(MFS) TCDB:2.A.1.13.1,"Transport, extracellular",1,0
+r2132,Major Facilitator(MFS) TCDB:2.A.1.13.1,"Transport, extracellular",1,0
+r2313,Resistance-Nodulation-Cell Division (RND) TCDB:2.A.60.1.2,"Transport, extracellular",1,0
+r2508,Utilized transport,"Transport, endoplasmic reticular",1,0
+CHOLESTTDe,CHOLESTTDe,"Transport, extracellular",2,0
+CHSTEROLtrc,transport of cholesterol into the cytosol,"Transport, endoplasmic reticular",2,0
+DM_mem2emgacpail_prot_hs_r_,DM mem2emgacpail prot hs(r),Exchange/demand reaction,1,0
+EX_2hb(e),2-Hydroxybutyrate exchange,Exchange/demand reaction,2,0
+EX_adrnl(e),Adrenaline exchange,Exchange/demand reaction,1,0
+EX_biocyt(e),Biocytin exchange,Exchange/demand reaction,1,0
+EX_cgly(e),Cys-Gly exchange,Exchange/demand reaction,1,0
+EX_tdchola(e),taurochenodeoxycholate exchange,Exchange/demand reaction,2,0

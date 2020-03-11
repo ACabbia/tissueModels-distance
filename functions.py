@@ -244,8 +244,9 @@ def plot_trajectory(embedding_df, label_Tr, patient_nr_label, plot_arrows=True, 
     data.columns = ['x', 'y', 'patient_nr']
 
     # plot arrows between untr --> tr for same subject
+    plt.figure(figsize=(10,7))
     ax = sns.scatterplot(
-        x=embedding_df.iloc[:, 0], y=embedding_df.iloc[:, 1], hue=label_Tr, s=70)
+        x=embedding_df.iloc[:, 0], y=embedding_df.iloc[:, 1], hue=label_Tr, s=100)
 
     for x in set(data['patient_nr'].values):
 
@@ -263,9 +264,9 @@ def plot_trajectory(embedding_df, label_Tr, patient_nr_label, plot_arrows=True, 
         if plot_patient_nr:
 
             plt.text(A[0] * (1 + 0.1), A[1] * (1 + 0.1),
-                     int(df.iloc[0, 2]), fontsize=9)
+                     int(df.iloc[0, 2]), fontsize=14)
             plt.text(B[0] * (1 + 0.1), B[1] * (1 + 0.1),
-                     int(df.iloc[0, 2]), fontsize=9)
+                     int(df.iloc[0, 2]), fontsize=14)
         else:
             continue
 
@@ -284,7 +285,7 @@ def plot_trajectory_adj(embedding_df, label_Tr, patient_nr_label, plot_arrows=Tr
 
     # plot arrows between untr --> tr for same subject
     ax = sns.scatterplot(
-        x=embedding_df.iloc[:, 0], y=embedding_df.iloc[:, 1], hue=label_Tr, s=80)
+        x=embedding_df.iloc[:, 0], y=embedding_df.iloc[:, 1], hue=label_Tr, s=80,size=(10,15))
 
     for x in set(data['patient_nr'].values):
 
@@ -297,7 +298,7 @@ def plot_trajectory_adj(embedding_df, label_Tr, patient_nr_label, plot_arrows=Tr
 
             arr = []
             a = ax.arrow(A[0], A[1], B[0]-A[0], B[1]-A[1],
-                         length_includes_head=True, color='black', alpha=0.5)
+                         length_includes_head=True, color='black', alpha=0.8)
             arr.append(a)
 
         else:
@@ -308,8 +309,7 @@ def plot_trajectory_adj(embedding_df, label_Tr, patient_nr_label, plot_arrows=Tr
             texts = [plt.text(A[0], A[1], str(int(df.iloc[0, 2])))]
             texts.append(plt.text(B[0], B[1], str(int(df.iloc[0, 2]))))
 
-            adjust_text(texts, add_objects=arr, expand_text=(
-                1.5, 1.5), expand_points=(1.5, 1.5))
+            adjust_text(texts, add_objects=[arr,texts], expand_text=(2, 2), expand_points=(2, 2))
 
         else:
             continue
@@ -319,15 +319,6 @@ def plot_trajectory_adj(embedding_df, label_Tr, patient_nr_label, plot_arrows=Tr
     plt.ylabel('PC 2')
     plt.show()
 
-def Mdist(rxn, graphlist, flux_df):
-
-    pw_DM = jaccard_DM(rxn)
-    pw_GK = gKernel_DM(graphlist)
-    pw_flx = flux_DM(flux_df)
-
-    M_dist = (pw_DM + pw_GK + pw_flx) / 3
-
-    return M_dist
 
 def flux_DM(df):
     # returns square pairwise (cosine) distance matrix between elements of sampled flux df
@@ -344,21 +335,22 @@ def gKernel_DM(graphList):
     K = pd.DataFrame(gkernel.fit_transform(graphList))
     return 1-K
 
-def embed(pw_matrix, embed):
+def embed(pw_matrix, method= 'KernelPCA'):
 
-    # different embeddings (MDS, KPCA, TSNE)
+    # Transform pairwise distance matrix in cartesian coordinates (2D)
+    # three different embedding algorithms (MDS, KPCA, TSNE)
 
-    if embed == 'KernelPCA':
+    if method == 'KernelPCA':
         embedding = pd.DataFrame(KernelPCA(
-            kernel="precomputed", n_components=2).fit_transform(1-pw_matrix))
-    elif embed == 'TSNE':
+            kernel="precomputed", n_components=2).fit_transform(1-pw_matrix), columns=['PC1','PC2'])
+    elif method == 'TSNE':
         embedding = pd.DataFrame(TSNE(
-            metric="precomputed", random_state=42, perplexity=5).fit_transform(pw_matrix))
-    elif embed == 'MDS':
+            metric="precomputed", random_state=42, perplexity=5).fit_transform(abs(pw_matrix)), columns=['PC1','PC2'])
+    elif method == 'MDS':
         embedding = pd.DataFrame(MDS(
-            n_components=2, dissimilarity='precomputed', random_state=42).fit_transform(pw_matrix))
+            n_components=2, dissimilarity='precomputed', random_state=42).fit_transform(pw_matrix), columns=['PC1','PC2'])
     else:
-        print('Embedding type unknown. Possible values: KernelPCA, TSNE, MDS')
+        print('Embedding method unknown. Possible values: KernelPCA, TSNE, MDS')
 
     return embedding
 
@@ -377,22 +369,6 @@ def select(df, to_keep = []):
     new_dm = df.loc[:,ids]
 
     return new_dm
-
-def select_DM(pw_DM, to_keep = []):
-
-    # selects rows and columns in a square (symmetric) distance matrix
-    # to_keep : list of strings or substrings of the indexes of the rows/cols to keep
-
-    ids = []
-    for i in pw_DM.index:
-        for n in to_keep:
-            if n in i:
-                ids.append(i)
-
-    new_dm = pw_DM.loc[ids,ids]
-
-    return new_dm
-
 
 def RQ(model):
     model.objective = 'ATPS4m'
