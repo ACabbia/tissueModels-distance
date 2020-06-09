@@ -6,10 +6,13 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial.distance import pdist, jaccard, cosine, squareform
+from sklearn.svm import SVC
 from sklearn.decomposition import KernelPCA
 from sklearn.manifold import MDS, TSNE
 from adjustText import adjust_text
 from tqdm import tqdm
+from skbio.stats.distance import mantel
+from itertools import product
 
 
 def binary(model, ref_model):
@@ -40,7 +43,7 @@ def binary(model, ref_model):
     return rxns, mets, genes
 
 
-def load_library(path, ref_model, sampling=False, FBA=False):
+def load_library(path, ref_model, graph =False, sampling=False, FBA=False):
     '''
     loads models from library folder and prepares data structures for further analysis
     returns:
@@ -72,7 +75,11 @@ def load_library(path, ref_model, sampling=False, FBA=False):
 
         # 2: make graphlist
 
-        graphlist.append(modelNet(model, remove_hub_metabolites=True))
+        if graph:
+            try:
+                graphlist.append(modelNet(model, remove_hub_metabolites=True))
+            except:
+                pass
 
         # 3: FBA/sampling
         if sampling:
@@ -198,8 +205,8 @@ def modelNet(model, remove_hub_metabolites=True):
 
 def KPCA(DM, label):
     # Kernel-PCA 2-D scatterplot
-    kpca = KernelPCA(kernel="precomputed", n_components=2, n_jobs=-1)
-    X_kpca = kpca.fit_transform(1-DM)
+    embedding = KernelPCA(kernel="precomputed", n_components=2, n_jobs=-1)
+    X_kpca = embedding.fit_transform(1-DM)
 
     g = sns.scatterplot(
         x=X_kpca[:, 0], y=X_kpca[:, 1], hue=label, legend='brief')
@@ -236,7 +243,7 @@ def get_bounds_from_file(model, file):
     return model
 
 
-def plot_trajectory(embedding_df, label_Tr, patient_nr_label, plot_arrows=True, plot_patient_nr=True):
+def plot_trajectory(embedding_df, label_Tr, patient_nr_label,title, plot_arrows=True, plot_patient_nr=True):
 
     # plot training trajectories
 
@@ -262,71 +269,29 @@ def plot_trajectory(embedding_df, label_Tr, patient_nr_label, plot_arrows=True, 
             continue
 
         if plot_patient_nr:
+            #offset
+            i= 0.0075
 
-            plt.text(A[0] * (1 + 0.1), A[1] * (1 + 0.1),
+            plt.text(A[0] + i, A[1] + i,
                      int(df.iloc[0, 2]), fontsize=14)
-            plt.text(B[0] * (1 + 0.1), B[1] * (1 + 0.1),
+            plt.text(B[0] - i, B[1] + i,
                      int(df.iloc[0, 2]), fontsize=14)
         else:
             continue
 
-    plt.suptitle('Training trajectories in older adults ')
-    plt.xlabel('PC 1')
-    plt.ylabel('PC 2')
+    plt.xlabel(embedding_df.iloc[:,0].name)
+    plt.ylabel(embedding_df.iloc[:,1].name)
+    plt.legend(loc='upper left')
+    plt.savefig('figures/savefig/trajectories_'+title+'.png')
     plt.show()
-
-
-def plot_trajectory_adj(embedding_df, label_Tr, patient_nr_label, plot_arrows=True, plot_patient_nr=True):
-
-    # plot training trajectories
-
-    data = pd.concat([embedding_df, patient_nr_label], axis=1)
-    data.columns = ['x', 'y', 'patient_nr']
-
-    # plot arrows between untr --> tr for same subject
-    ax = sns.scatterplot(
-        x=embedding_df.iloc[:, 0], y=embedding_df.iloc[:, 1], hue=label_Tr, s=80,size=(10,15))
-
-    for x in set(data['patient_nr'].values):
-
-        df = data[data['patient_nr'] == x]
-
-        A = [df.iloc[1, 0], df.iloc[1, 1]]
-        B = [df.iloc[0, 0], df.iloc[0, 1]]
-
-        if plot_arrows:
-
-            arr = []
-            a = ax.arrow(A[0], A[1], B[0]-A[0], B[1]-A[1],
-                         length_includes_head=True, color='black', alpha=0.8)
-            arr.append(a)
-
-        else:
-            continue
-
-        if plot_patient_nr:
-
-            texts = [plt.text(A[0], A[1], str(int(df.iloc[0, 2])))]
-            texts.append(plt.text(B[0], B[1], str(int(df.iloc[0, 2]))))
-
-            adjust_text(texts, add_objects=[arr,texts], expand_text=(2, 2), expand_points=(2, 2))
-
-        else:
-            continue
-
-    plt.suptitle('Training trajectories in older adults ')
-    plt.xlabel('PC 1')
-    plt.ylabel('PC 2')
-    plt.show()
-
 
 def flux_DM(df):
     # returns square pairwise (cosine) distance matrix between elements of sampled flux df
-    df.fillna(inplace=True, value=0)
-    # take absolute value to ensure positivity == metric
-    DM = df.corr().abs()
-    return 1-DM
+    z = zscores(df)
+    DM = pd.DataFrame(squareform(pdist(z, metric='cosine')),index=z.index, columns=z.index)
+    # take absolute value to ensure positivity == it's a metric
 
+    return 1-abs(DM.corr())
 
 def gKernel_DM(graphList):
     # returns 1 - kernel similarity matrix (i.e. distance)
@@ -352,8 +317,11 @@ def embed(pw_matrix, method= 'KernelPCA'):
     else:
         print('Embedding method unknown. Possible values: KernelPCA, TSNE, MDS')
 
-    return embedding
+    # put variance of each principal component in the column label
+    var = embedding.var()
+    embedding.columns = [c+' ('+str(np.round(var[c] * 100,3))+'%)' for c in embedding.columns]
 
+    return embedding
 
 def select(df, to_keep = []):
 
@@ -384,53 +352,54 @@ def RQ(model):
     return rq
 
 
-def RQ_test(path):
-    'Functional Metabolic tests'
-    carbon_sources = ['EX_glc(e)','EX_fru(e)','EX_octa(e)','EX_lnlnca(e)','EX_hdcea(e)','EX_lnlc(e)',
-                      'EX_ttdca(e)','EX_hdca(e)','EX_ocdca(e)','EX_arach(e)','EX_lgnc(e)']
-    rq_df = pd.DataFrame(index = carbon_sources)
+def zscores(smpl):
+    smpl = smpl.T
 
-    for filename in sorted(os.listdir(path)):
-        model = cobra.io.read_sbml_model(path+filename)
-        print(filename)
+    idx = (smpl - smpl.mean())/smpl.std()
+    idx.fillna(0,inplace=True)
+    #drop reaction if z score for that reaction is always zero
+    to_drop = list(idx.sum()[idx.sum()==0].index.values)
+    idx.drop(to_drop,1,inplace=True)
 
-        rq_list = []
-        for c in carbon_sources:
+    return idx
 
-            #close all inflows , leave outflows open
-      
-            for r in model.exchanges:
-                r.bounds = 0,0
-            
-            # make sure sink reactions are irreversible
-            for r in model.reactions:
-                if 'sink' in r.id:
-                    r.bounds = 0,1000
+def plot_zscores(idx, rxn_list, label):
 
-            try:
-                #allow oxygen and water free exchange, co2 outflow 
-                model.reactions.get_by_id('EX_o2(e)').bounds= -1000,1000
-                model.reactions.get_by_id('EX_h2o(e)').bounds= -1000,1000
-                model.reactions.get_by_id('EX_co2(e)').bounds= 0,1000
-                #model.reactions.get_by_id('EX_h(e)').bounds= 0,1000 
-                        
-                # allow inflow of selected carbon source 
-                model.reactions.get_by_id(c).bounds = -1000, 1000 
-            
-            except KeyError:
-                pass        
+    colors = {0: '#f39c12',
+              1: '#2980b9'}
+    idx['label'] = label
     
-            # FBA and RQ computations
-            rq = RQ(model)
-            rq_list.append(rq)
-            print(c)
-            print('RQ = ',rq)
-            #print(model.summary())
-                    
-        print("===============================================================")
+    for x in rxn_list:
+        
+        fig, ax = plt.subplots()
+        idx.loc[:,x].sort_values(ascending=True).plot(kind='barh',
+                                                      color=[colors[i] for i in idx.sort_values(by=x)['label']],
+                                                      figsize=(15,12),
+                                                      ax = ax)
+        plt.axvline(x=0,color='k')
+        plt.axvline(x=2.5, color='r', linestyle='--', dashes = [10,4])
+        plt.axvline(x=-2.5, color='r', linestyle='--',dashes = [10,4])
+        plt.xlabel('Deviation from the mean flux (sigma)')
+        plt.ylabel('Model')
+        plt.title('Deviation from the mean, Reaction '+x)
+        plt.savefig('figures/savefig/zscore_plots/zscores_'+x+'.png',bbox_inches='tight')
+        plt.show()
 
-        rq_df[filename] = rq_list
+# correlation between distance matrices (Mantel's test)
+def mantel_test(dist_mat_list,filename):
+    values = []
+    pval = []
 
-    return rq_df     
+    for pair in product(dist_mat_list,repeat=2):
+        
+        sol = (mantel(pair[0],pair[1],'pearson'))
+        values.append(np.round(sol[0], 3))
+        pval.append(sol[1])
 
-    ## glc and fru don't work yet
+    rez = pd.DataFrame(np.array(values).reshape((3,3)),
+                    index = ['Jaccard','GraphKernel','fluxCorr'],
+                    columns = ['Jaccard','GraphKernel','fluxCorr'])
+
+    rez.to_csv('csv/mantel_'+filename+'.csv', sep = ',')    
+
+    return rez            
