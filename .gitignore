@@ -1,9 +1,11 @@
 # Don't track content of these folders
-figures/
+
 __pycache__/
 .vscode
+.gitignore
 csv/
 models/
+figures/
 
 # Compiled source #
 ###################
