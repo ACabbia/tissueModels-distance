@@ -145,7 +145,7 @@ def mk_diff_df(diff, ref_model):
 #%%
 #load models and label
 
-path_MM = 'models/muscle_old_sedentary_trained/'
+path_MM = 'models/SKM_older_adults/'
 path_ref_MM = 'models/recon2.2.xml'
 
 # get labels (Tr/Untr) (patients_num) 
